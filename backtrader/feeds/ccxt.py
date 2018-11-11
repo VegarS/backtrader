@@ -121,8 +121,12 @@ class CCXT(DataBase):
 
         while True:
             dlen = len(self._data)
-            for ohlcv in sorted(self.store.fetch_ohlcv(self.symbol, timeframe=granularity,
-                                                       since=since, limit=limit)):
+            candles = sorted(self.store.fetch_ohlcv(self.symbol, timeframe=granularity,
+                                                       since=since, limit=limit))
+            if len(candles) == 0 and since is not None and self._last_ts == 0:
+                # No candles = no trades, make sure _last_ts is correct
+                self._last_ts = since
+            for ohlcv in candles:
                 if None in ohlcv:
                     continue
 
