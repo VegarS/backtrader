@@ -96,3 +96,6 @@ class CCXTBroker(BrokerBase):
 
     def get_orders_open(self, safe=False):
         return self.store.fetch_open_orders()
+
+    def next(self):
+        self.store.update_balance(self.currency)

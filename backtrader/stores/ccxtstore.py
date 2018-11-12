@@ -95,6 +95,8 @@ class CCXTStore(object):
     def __init__(self, exchange, config, retries):
         self.exchange = getattr(ccxt, exchange)(config)
         self.retries = retries
+        self._balance = None
+        self._balance_last = 0
 
     def get_granularity(self, timeframe, compression):
         if not self.exchange.has['fetchOHLCV']:
@@ -126,15 +128,18 @@ class CCXTStore(object):
 
         return retry_method
 
-    @retry
+    def update_balance(self, currency, force=False):
+        now = time.time()
+        if force or now - self._balance_last > 10:
+            self._balance = self.exchange.fetch_balance()
+            self._balance_last = now
+
     def getcash(self, currency):
-        return self.exchange.fetch_balance()['free'].get(currency, 0.0)
+        return self._balance['free'].get(currency, 0.0)
 
-    @retry
     def getvalue(self, currency):
-        return self.exchange.fetch_balance()['total'].get(currency, 0.0)
+        return self._balance['total'].get(currency, 0.0)
 
-    @retry
     def getposition(self, currency):
         return self.getvalue(currency)
 
